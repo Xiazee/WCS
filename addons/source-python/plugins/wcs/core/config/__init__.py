@@ -25,7 +25,6 @@ __all__ = (
     'cfg_disable_text_on_level',
     'cfg_headshot_xp',
     'cfg_headshot_bot_xp',
-    'cfg_interval',
     'cfg_kill_xp',
     'cfg_kill_bot_xp',
     'cfg_knife_xp',
@@ -66,7 +65,13 @@ __all__ = (
     'cfg_bot_bomb_explode_xp',
     'cfg_bot_bomb_defuse_xp',
     'cfg_bot_hostage_rescue_xp',
-    'cfg_bot_ability_chance'
+    'cfg_bot_ability_chance',
+    'cfg_requiredxp_base',
+    'cfg_requiredxp_interval',
+    'cfg_requiredxp_interval_add',
+    'cfg_requiredxp_interval_10add',
+    'cfg_requiredxp_level_squared_first',
+    'cfg_requiredxp_level_squared',
 )
 
 
@@ -75,7 +80,7 @@ __all__ = (
 # ============================================================================
 # Create the configuration file
 with ConfigManager(f'{info.name}/config.cfg', cvar_prefix=f'{info.name}_') as config:
-    cfg_interval = config.cvar('interval', '80', config_strings['interval'])
+    #cfg_interval = config.cvar('interval', '80', "DEPRECATED, see requiredxp_*")
     cfg_bonus_xp = config.cvar('bonus_xp', '4', config_strings['bonus_xp'])
     cfg_bonus_bot_xp = config.cvar('bonus_bot_xp', '4', config_strings['bonus_bot_xp'])
     cfg_bonus_xp_level_cap = config.cvar('bonus_xp_level_cap', '0', config_strings['bonus_xp_level_cap'])
@@ -126,3 +131,14 @@ with ConfigManager(f'{info.name}/config.cfg', cvar_prefix=f'{info.name}_') as co
     cfg_bot_bomb_defuse_xp = config.cvar('bot_bomb_defuse_xp', '-1', config_strings['bot_bomb_defuse_xp'])
     cfg_bot_hostage_rescue_xp = config.cvar('bot_hostage_rescue_xp', '-1', config_strings['bot_hostage_rescue_xp'])
     cfg_bot_ability_chance = config.cvar('bot_ability_chance', '0.15', config_strings['bot_ability_chance'])
+
+    for k, v in {
+        'requiredxp_base': 60,                 # Base required exp added before the interval
+        'requiredxp_interval': 40,             # How much more exp is required every level
+        'requiredxp_interval_add': 20,         # Added to interval every level, fx 60 + 40 + (40+20) + (40+20+20)
+        'requiredxp_interval_10add': 50,       # - every 10 level, fx 60 + 40 + ... + (40+50) + (40+50)
+        'requiredxp_level_squared_first': 10,  # From which level to start applying squared factor
+        'requiredxp_level_squared': 10,        # fx 10 * (level-first)^2
+    }.items():
+        globals()[f"cfg_{k}"] = config.cvar(k, v, config_strings[k])
+

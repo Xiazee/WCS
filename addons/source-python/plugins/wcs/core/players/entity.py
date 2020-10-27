@@ -60,7 +60,8 @@ from weapons.restrictions import WeaponRestrictionHandler
 
 # WCS Imports
 #   Config
-from ..config import cfg_interval
+from ..config import cfg_requiredxp_base, cfg_requiredxp_interval, cfg_requiredxp_interval_add,\
+    cfg_requiredxp_interval_10add, cfg_requiredxp_level_squared_first, cfg_requiredxp_level_squared
 from ..config import cfg_bot_random_race
 from ..config import cfg_new_player_bank_bonus
 #   Constants
@@ -1073,9 +1074,28 @@ class _Race(object):
                         except_hooks.print_exception()
                         break
 
+    @staticmethod
+    def get_required_xp(level):
+        """ Gets the required exp to level up from a given level """
+        base = cfg_requiredxp_base.get_int()
+
+        interval = cfg_requiredxp_interval.get_int() * level
+        interval_add = (cfg_requiredxp_interval_add.get_int() * ((level-1)*level//2))
+        interval_10add = (
+            # Sum of exp from full intervals, i.e. level 10-19, 20-29...
+            # x just happens to be the number to multiply by for the range, since x[20..29] = 2*10 = 20
+            sum(x * cfg_requiredxp_interval_10add.get_int() for x in range(10, (level // 10) * 10, 10))
+            # The remaining part, i.e. 30-34
+            + cfg_requiredxp_interval_10add.get_int() * (level - ((level // 10) * 10)) if level >= 10 else 0
+        )
+
+        squared = cfg_requiredxp_level_squared.get_int() * (level//10) * (max(0, level - cfg_requiredxp_level_squared_first.get_int()))
+
+        return base + interval + interval_add + interval_10add + squared
+
     @property
     def required_xp(self):
-        return cfg_interval.get_int() * self.level
+        return self.get_required_xp(self.level)
 
     @property
     def xp(self):
@@ -1093,7 +1113,6 @@ class _Race(object):
         new_level = self.level
 
         required_xp = self.required_xp
-        interval = cfg_interval.get_int()
 
         while value >= required_xp:
             value -= required_xp
@@ -1104,7 +1123,7 @@ class _Race(object):
                 value = 0
                 break
 
-            required_xp += interval
+            required_xp = self.get_required_xp(new_level)
 
         self._xp = value
 
