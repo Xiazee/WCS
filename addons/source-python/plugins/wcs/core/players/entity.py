@@ -60,8 +60,9 @@ from weapons.restrictions import WeaponRestrictionHandler
 
 # WCS Imports
 #   Config
-from ..config import cfg_requiredxp_base, cfg_requiredxp_interval, cfg_requiredxp_interval_add,\
-    cfg_requiredxp_interval_10add, cfg_requiredxp_level_squared_first, cfg_requiredxp_level_squared
+from ..config import cfg_requiredxp_start, cfg_requiredxp_interval, cfg_requiredxp_interval_growth,\
+    cfg_requiredxp_interval_10growth, cfg_requiredxp_level_squared_first, cfg_requiredxp_level_squared, \
+    cfg_requiredxp_cap
 from ..config import cfg_bot_random_race
 from ..config import cfg_new_player_bank_bonus
 #   Constants
@@ -1077,21 +1078,33 @@ class _Race(object):
     @staticmethod
     def get_required_xp(level):
         """ Gets the required exp to level up from a given level """
-        base = cfg_requiredxp_base.get_int()
+        start = cfg_requiredxp_start.get_int()
+        num_start_entries = 1  # TODO: should be the number of xp requirements entered in start, if a list is specified
 
-        interval = cfg_requiredxp_interval.get_int() * level
-        interval_add = (cfg_requiredxp_interval_add.get_int() * ((level-1)*level//2))
-        interval_10add = (
+        interval = cfg_requiredxp_interval.get_int() * max(0, (level-1))
+
+        def interval_growth_sum(n):
+            """Sum of numbers 1..n (but cheaper than actually summing them)"""
+            return (n*(n+1))//2
+
+        interval_growth = (cfg_requiredxp_interval_growth.get_int() * interval_growth_sum(level-1-num_start_entries)) \
+            if level > 1+num_start_entries else 0
+
+        interval_10growth = (
             # Sum of exp from full intervals, i.e. level 10-19, 20-29...
             # x just happens to be the number to multiply by for the range, since x[20..29] = 2*10 = 20
-            sum(x * cfg_requiredxp_interval_10add.get_int() for x in range(10, (level // 10) * 10, 10))
+            sum(x * cfg_requiredxp_interval_10growth.get_int() for x in range(10, (level // 10) * 10, 10))
             # The remaining part, i.e. 30-34
-            + cfg_requiredxp_interval_10add.get_int() * (level - ((level // 10) * 10)) if level >= 10 else 0
+            + cfg_requiredxp_interval_10growth.get_int() * (level - ((level // 10) * 10)) if level >= 10 else 0
         )
 
-        squared = cfg_requiredxp_level_squared.get_int() * (level//10) * (max(0, level - cfg_requiredxp_level_squared_first.get_int()))
+        squared = cfg_requiredxp_level_squared.get_int() * pow((max(0, level - cfg_requiredxp_level_squared_first.get_int())), 2)
 
-        return base + interval + interval_add + interval_10add + squared
+        res = start + interval + interval_growth + interval_10growth + squared
+        if cfg_requiredxp_cap.get_int() > 0:
+            res = min(res, cfg_requiredxp_cap.get_int())
+
+        return res
 
     @property
     def required_xp(self):

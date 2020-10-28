@@ -66,12 +66,13 @@ __all__ = (
     'cfg_bot_bomb_defuse_xp',
     'cfg_bot_hostage_rescue_xp',
     'cfg_bot_ability_chance',
-    'cfg_requiredxp_base',
+    'cfg_requiredxp_start',
     'cfg_requiredxp_interval',
-    'cfg_requiredxp_interval_add',
-    'cfg_requiredxp_interval_10add',
+    'cfg_requiredxp_interval_growth',
+    'cfg_requiredxp_interval_10growth',
     'cfg_requiredxp_level_squared_first',
     'cfg_requiredxp_level_squared',
+    'cfg_requiredxp_cap',
 )
 
 
@@ -133,12 +134,13 @@ with ConfigManager(f'{info.name}/config.cfg', cvar_prefix=f'{info.name}_') as co
     cfg_bot_ability_chance = config.cvar('bot_ability_chance', '0.15', config_strings['bot_ability_chance'])
 
     for k, v in {
-        'requiredxp_base': 60,                 # Base required exp added before the interval
+        'requiredxp_start': 100,               # Exp required for the first level-up
         'requiredxp_interval': 40,             # How much more exp is required every level
-        'requiredxp_interval_add': 20,         # Added to interval every level, fx 60 + 40 + (40+20) + (40+20+20)
-        'requiredxp_interval_10add': 50,       # - every 10 level, fx 60 + 40 + ... + (40+50) + (40+50)
-        'requiredxp_level_squared_first': 10,  # From which level to start applying squared factor
-        'requiredxp_level_squared': 10,        # fx 10 * (level-first)^2
+        'requiredxp_interval_growth': 10,      # Added to interval every level, fx 60 + 40 + (40+20) + (40+20+20)
+        'requiredxp_interval_10growth': 50,    # - every 10 level, fx 60 + 40 + ... + (40+50) + (40+50)
+        'requiredxp_level_squared_first': 16,  # From which level to start applying squared factor
+        'requiredxp_level_squared': 5,        # fx 10 * (level-first)^2
+        'requiredxp_cap': 5000,                # Maximum possible required xp to level-up
     }.items():
         globals()[f"cfg_{k}"] = config.cvar(k, v, config_strings[k])
 
