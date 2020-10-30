@@ -61,7 +61,7 @@ from weapons.restrictions import WeaponRestrictionHandler
 # WCS Imports
 #   Config
 from ..config import cfg_requiredxp_start, cfg_requiredxp_interval, cfg_requiredxp_interval_growth,\
-    cfg_requiredxp_interval_10growth, cfg_requiredxp_level_squared_first, cfg_requiredxp_level_squared, \
+    cfg_requiredxp_interval_10level_growth, cfg_requiredxp_level_squared_first, cfg_requiredxp_level_squared, \
     cfg_requiredxp_cap
 from ..config import cfg_bot_random_race
 from ..config import cfg_new_player_bank_bonus
@@ -1093,9 +1093,9 @@ class _Race(object):
         interval_10growth = (
             # Sum of exp from full intervals, i.e. level 10-19, 20-29...
             # x just happens to be the number to multiply by for the range, since x[20..29] = 2*10 = 20
-            sum(x * cfg_requiredxp_interval_10growth.get_int() for x in range(10, (level // 10) * 10, 10))
+            sum(x * cfg_requiredxp_interval_10level_growth.get_int() for x in range(10, (level // 10) * 10, 10))
             # The remaining part, i.e. 30-34
-            + cfg_requiredxp_interval_10growth.get_int() * (level - ((level // 10) * 10)) if level >= 10 else 0
+            + (level//10)*cfg_requiredxp_interval_10level_growth.get_int() * (level - ((level // 10) * 10) + 1)
         )
 
         squared = cfg_requiredxp_level_squared.get_int() * pow((max(0, level - cfg_requiredxp_level_squared_first.get_int())), 2)
